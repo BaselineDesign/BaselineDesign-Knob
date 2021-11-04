@@ -1,4 +1,4 @@
- #include <ClickEncoder.h>
+#include <ClickEncoder.h>
 #include <TimerOne.h>
 #include <HID-Project.h>
 #include <ezButton.h>
@@ -38,6 +38,7 @@ void setup() {
   
   //ENCODER SETUP
   Consumer.begin(); // Initializes the media keyboard
+  Keyboard.begin(); // Initialize the standard keyvoard
   encoder = new ClickEncoder(ENCODER_DT, ENCODER_CLK); // Initializes the rotary encoder with the mentioned pins
   Timer1.initialize(1000); // Initializes the timer, which the rotary encoder uses to detect rotation
   Timer1.attachInterrupt(timerIsr);
@@ -64,14 +65,24 @@ void loop() {
     centerSwitch.loop();  // MUST call the loop() function first
     rightSwitch.loop();   // MUST call the loop() function first
     
-    if(leftSwitch.isReleased())
-      Consumer.write(leftSwitchAction);
+    if(leftSwitch.isReleased()){
+      Keyboard.press(KEY_LEFT_ALT);
+      Keyboard.press('a');
+      Keyboard.releaseAll();
+    }
   
-    else if(centerSwitch.isReleased())
-      Consumer.write(centerSwitchAction);
   
-    else if(rightSwitch.isReleased())
-      Consumer.write(rightSwitchAction);    
+    else if(centerSwitch.isReleased()){
+      Keyboard.press(KEY_LEFT_ALT);
+      Keyboard.press('v');
+      Keyboard.releaseAll();
+    }
+  
+    else if(rightSwitch.isReleased()){
+      Keyboard.press(KEY_LEFT_ALT);
+      Keyboard.press('y');
+      Keyboard.releaseAll();   
+    }
   }
 }
 

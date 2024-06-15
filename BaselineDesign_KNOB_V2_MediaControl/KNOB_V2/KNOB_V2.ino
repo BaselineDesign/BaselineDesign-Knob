@@ -33,7 +33,7 @@ If you cant upload code to your KNOB verify the following:
   
   //SENSITIVITY ADJUSTMENTS
   #define volumeSensitivity 80
-  #define holdTime 350
+  #define holdTime 800
   #define switchDebounce 30
 
 //LIBRARY CONFIGURATION
@@ -54,9 +54,9 @@ AS5600 as5600;   //  use default Wire
 
 void setup() {
   //PINMODE INITIALIZATION
-  pinMode (7,INPUT);
-  pinMode (8,INPUT);
-  pinMode (9,INPUT);
+  //pinMode (7,INPUT);
+  //pinMode (8,INPUT);
+  //pinMode (9,INPUT);
   pinMode (red,OUTPUT);
   pinMode (green,OUTPUT);
   pinMode (blue,OUTPUT);
@@ -98,31 +98,38 @@ void loop() {
   
 //This part handles all the button presses
   else {
+    static bool centerHeld = false;
     static long timePressed;
     static long timeReleased;
+    static long ogTimePressed;
     leftSwitchObject.loop();
     centerSwitchObject.loop();
     rightSwitchObject.loop();
 
     //checks if the center button was held and if it was been triggers the changeState() (see the bottom)
-    if (timeReleased - timePressed >= holdTime){
-        Consumer.write(centerSwitch);
+    if (centerHeld == true && millis()-timePressed >= holdTime){
         changeState();
-        timeReleased = 0;
-        timePressed = 0;
+        timePressed = millis();
     }
         
-    else if(leftSwitchObject.isPressed())
+    else if(leftSwitchObject.isReleased())
       Consumer.write(leftSwitch);
   
-    else if(centerSwitchObject.isPressed()){
-      Consumer.write(centerSwitch);
-      timePressed = millis();
+    else if(centerSwitchObject.isReleased()){
+      centerHeld = false;
+      Serial.println(millis()-ogTimePressed);
+      if(millis()-ogTimePressed < holdTime){
+          Consumer.write(centerSwitch);
+      }
     }
-    else if(centerSwitchObject.isReleased())
-      timeReleased = millis();
+
+    else if(centerSwitchObject.isPressed()){
+      timePressed = millis();
+      ogTimePressed = millis();
+      centerHeld = true;
+    }
   
-    else if(rightSwitchObject.isPressed())
+    else if(rightSwitchObject.isReleased())
       Consumer.write(rightSwitch);    
   }
 }
@@ -135,15 +142,24 @@ void changeState(){
     state++;
   if(state == 1){
     digitalWrite(red, HIGH);
-    digitalWrite(green, HIGH);
   }
   else if(state == 2){
-    digitalWrite(red, HIGH);
+    digitalWrite(red, LOW);
     digitalWrite(green, HIGH);
   }
+  else if(state == 3){
+    digitalWrite(green, LOW);
+    digitalWrite(blue, HIGH);
+  }
+    else if(state == 4){
+      digitalWrite(green, HIGH);
+      digitalWrite(green, HIGH);
+      digitalWrite(blue, HIGH);
+  }
   else{
-    digitalWrite(red, HIGH);
-    digitalWrite(green, HIGH);
+    digitalWrite(red, LOW);
+    digitalWrite(green, LOW);
+    digitalWrite(blue, LOW);
     state=0;
   }
   startup = false;

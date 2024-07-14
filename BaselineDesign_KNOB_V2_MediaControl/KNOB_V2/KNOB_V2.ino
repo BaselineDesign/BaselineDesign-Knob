@@ -7,6 +7,9 @@ https://github.com/NicoHood/HID/wiki/Consumer-API
 A list of possible keystrokes and instructions on how to send them can be found here:
 https://github.com/NicoHood/HID/wiki/Keyboard-API
 
+A list of media controller information can be found here:
+https://github.com/NicoHood/HID/wiki/Consumer-API
+
 see https://github.com/NicoHood/HID for the complete documentation of what can be controlled
 
 If you cant upload code to your KNOB verify the following:
@@ -42,6 +45,8 @@ If you cant upload code to your KNOB verify the following:
 #include <AS5600.h>
 #include <EEPROM.h>
 
+
+
 //PIN CONFIGURATION
 ezButton leftSwitchObject(9);
 ezButton centerSwitchObject(8);
@@ -53,10 +58,6 @@ AS5600 as5600;   //  use default Wire
 
 
 void setup() {
-  //PINMODE INITIALIZATION
-  //pinMode (7,INPUT);
-  //pinMode (8,INPUT);
-  //pinMode (9,INPUT);
   pinMode (red,OUTPUT);
   pinMode (green,OUTPUT);
   pinMode (blue,OUTPUT);
@@ -65,8 +66,9 @@ void setup() {
   centerSwitchObject.setDebounceTime(switchDebounce); 
   rightSwitchObject.setDebounceTime(switchDebounce); 
   
-  Consumer.begin(); //Initializes the HID Library
-  as5600.begin(4);  //set Encoder direction pin.
+  Consumer.begin();   //Initializes the HID Library
+  Wire.begin(4);      //set Encoder direction pin and start Wire
+  as5600.begin();     //Start as5600
   Serial.begin(9600); //Opens the serial connection used for communication with the PC.
   changeState();
 }

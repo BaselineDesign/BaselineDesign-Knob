@@ -38,8 +38,6 @@ If you cant upload code to your KNOB verify the following:
   #define leftSwitch MEDIA_PREVIOUS
   #define centerSwitch MEDIA_PLAY_PAUSE
   #define rightSwitch MEDIA_NEXT
-  #define scrollCW MEDIA_VOLUME_UP
-  #define scrollCCW MEDIA_VOLUME_DOWN
   void scrollCWMode1() {Consumer.write(MEDIA_VOLUME_UP);}
   void scrollCCWMode1() {Consumer.write(MEDIA_VOLUME_DOWN);}
   void scrollCWMode2() {Mouse.move(0, 0, 1);}

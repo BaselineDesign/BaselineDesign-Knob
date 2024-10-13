@@ -33,14 +33,30 @@ If you cant upload code to your KNOB verify the following:
 
 //USER CONFIGURABLE OPTIONS
   //SWITCH ACTIONS
-  void leftSwitchMode1() {Consumer.write(MEDIA_PREVIOUS);}
-  void centerSwitchMode1() {Consumer.write(MEDIA_PLAY_PAUSE);}
-  void rightSwitchMode1() {Consumer.write(MEDIA_NEXT);}
-  void scrollCWMode1() {Consumer.write(MEDIA_VOLUME_UP);}
-  void scrollCCWMode1() {Consumer.write(MEDIA_VOLUME_DOWN);}
+  void leftSwitchMode1() { 
+    Keyboard.press(KEY_LEFT_CTRL);
+    Keyboard.press(KEY_LEFT_SHIFT);
+    Keyboard.press(KEY_TAB);
+    delay(100);
+    Keyboard.releaseAll();
+  }
+  void centerSwitchMode1() {
+    Keyboard.press(KEY_LEFT_CTRL);
+    Keyboard.press('w');
+    delay(100);
+    Keyboard.releaseAll();
+  }
+  void rightSwitchMode1() {
+    Keyboard.press(KEY_LEFT_CTRL);
+    Keyboard.press(KEY_TAB);
+    delay(100);
+    Keyboard.releaseAll();
+  }
+  void scrollCWMode1() {Mouse.move(0, 0, 1);}
+  void scrollCCWMode1() {Mouse.move(0, 0, -1);}
  
   //SENSITIVITY ADJUSTMENTS
-  #define volumeSensitivity 80
+  #define volumeSensitivity 40 //larger number means a slower scroll
   #define holdTime 800
   #define switchDebounce 30
 
@@ -144,21 +160,10 @@ void changeState(){
   if(startup != true)
     state++;
   if(state == 1){
-    digitalWrite(red, HIGH);
+    analogWrite(red, 150);
+    analogWrite(blue, 255);
   }
-  else if(state == 2){
-    digitalWrite(red, LOW);
-    digitalWrite(green, HIGH);
-  }
-  else if(state == 3){
-    digitalWrite(green, LOW);
-    digitalWrite(blue, HIGH);
-  }
-    else if(state == 4){
-      digitalWrite(green, HIGH);
-      digitalWrite(green, HIGH);
-      digitalWrite(blue, HIGH);
-  }
+
   else{
     digitalWrite(red, LOW);
     digitalWrite(green, LOW);

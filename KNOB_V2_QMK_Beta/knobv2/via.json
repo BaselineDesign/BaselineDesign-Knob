@@ -1,0 +1,41 @@
+{
+    "name": "KNOBV2",
+    "vendorId": "0x4244",
+    "productId": "0x4B4E",
+    "matrix": {
+        "rows": 1,
+        "cols": 3
+    },
+    "layouts": {
+        "keymap": [
+            ["0,0","0,1","0,2"]
+        ]
+    },
+
+    "menus": [
+        {
+            "label": "Label 1",
+            "content": [
+                {
+                    "label": "label 2",
+                    "content": [
+                        {
+                            "label": "label 3",
+                            "type": "dropdown",
+                            "options":[
+                                ["red", 0],
+                                ["green", 1],
+                                ["blue", 2],
+                                ["purple", 3],
+                                ["yellow", 4],
+                                ["cyan", 5],
+                                ["off", 6]
+                            ],
+                            "content": ["id_key_color", 0, 1]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -87,21 +87,23 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             case 0:
                 // main layer - move mouse right (CW) and left (CCW)
                 if (clockwise) {
-                    tap_code(KC_MS_R);
+                    tap_code(KC_KB_VOLUME_UP);
                 } else {
-                    tap_code(KC_MS_L);
+                    tap_code(KC_KB_VOLUME_DOWN);
                 }
                 break;
 
             default:
                 // other layers - =/+ (quals/plus) (CW) and -/_ (minus/underscore) (CCW)
                 if (clockwise) {
-                    tap_code(KC_EQL);
+                    tap_code(KC_KB_VOLUME_UP);
                 } else {
-                    tap_code(KC_MINS);
+                    tap_code(KC_KB_VOLUME_DOWN);
                 }
                 break;
         }
     }
     return true;
 }
+
+

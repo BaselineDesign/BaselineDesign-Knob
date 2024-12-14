@@ -1,0 +1,9 @@
+#define BOOTMAGIC_ROW 0
+#define BOOTMAGIC_COLUMN 1
+
+#define I2C1_SCL_PIN D3
+#define I2C1_SDA_PIN D2
+
+#define AS5600_I2C_ADDRESS 0x36
+
+#define DEBUG

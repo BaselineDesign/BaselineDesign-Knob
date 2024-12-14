@@ -1,0 +1,3 @@
+ENCODER_ENABLE = yes
+I2C_DRIVER = hardware
+I2C_ENABLE = yes

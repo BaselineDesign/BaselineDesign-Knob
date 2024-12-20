@@ -9,13 +9,30 @@
 #define RGB_PIN_GREEN C6
 #define RGB_PIN_BLUE D7
 
+void custom_config_set_value(uint8_t *data);
+void custom_config_get_value(uint8_t *data);
+void custom_config_save(void);
+void setColor(void);
+
+struct custom_config{
+    uint8_t color;
+    uint16_t CW;
+    uint16_t CCW;
+} g_custom_config;
+
+struct custom_config g_custom_config = {
+    .color = 0,         // Default value for `color`
+    .CW = KC_VOLU,      // Default value for `CW`
+    .CCW = KC_VOLD      // Default value for `CCW`
+};
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [0] = LAYOUT(
         KC_MEDIA_PREV_TRACK,   KC_MEDIA_PLAY_PAUSE,   KC_MEDIA_NEXT_TRACK
     )
 };
-uint16_t volume_key_codes[2] = {KC_VOLU, KC_VOLD};
+
 
 void keyboard_pre_init_user(void){
     // Initialize the I2C driver
@@ -25,18 +42,13 @@ void keyboard_pre_init_user(void){
     wait_ms(10); // Wait for the release to happen
     // You can print a message to verify I2C initialization
     uprintf("I2C Initialized\n");
-    //backlight_enable();
     
     // Set the RGB pins as outputs
     setPinOutput(RGB_PIN_RED);
     setPinOutput(RGB_PIN_GREEN);
     setPinOutput(RGB_PIN_BLUE);
 
-    // Set the RGB color
-    // Set pins high to turn on the corresponding color
-    writePinHigh(RGB_PIN_RED);   // Turn on red
-    //writePinHigh(RGB_PIN_GREEN);  // Turn off green
-    //writePinHigh(RGB_PIN_BLUE);  // Turn on blue
+    void setColor()
 }
 
 uint8_t data_high[1];  // Array to store the high byte
@@ -103,22 +115,180 @@ void matrix_scan_user(void) {
     
     // Volume control logic
     if (delta > stepSize) {
-        // Increase volume
-        register_code(volume_key_codes[0]);  // Send key press
-        wait_ms(10);              // Wait for the key to register
-        unregister_code(volume_key_codes[0]);  // Release key
+        // Do on CW
         lastValue = scaled_angle;  // Update last value
+        register_code(g_custom_config.CW);  // Send key press
+        wait_ms(10);              // Wait for the key to register
+        unregister_code(g_custom_config.CW);  // Release key
     } 
     
     else if (delta < -stepSize) {
-        // Decrease volume
-        register_code(volume_key_codes[1]);  // Send key press
-        wait_ms(10);              // Wait for the key to register
-        unregister_code(volume_key_codes[1]);  // Release key
+        // Do on CCW
         lastValue = scaled_angle;  // Update last value
+        register_code(g_custom_config.CCW);  // Send key press
+        wait_ms(10);              // Wait for the key to register
+        unregister_code(g_custom_config.CCW);  // Release key
  
     }
 }
 
-//"content": ["id_qmk_rgblight_brightness", 2, 1]
+
+
+
+
+
+
+
+enum via_buttglow_value {
+    id_key_color   = 1,
+    id_CW_keycode  = 2,
+    id_CCW_keycode = 3
+};
+
+void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
+    // data = [ command_id, channel_id, value_id, value_data ]
+    uint8_t *command_id        = &(data[0]);
+    uint8_t *channel_id        = &(data[1]);
+    uint8_t *value_id_and_data = &(data[2]);
+
+    if (*channel_id == id_custom_channel) {
+        
+        switch (*command_id) {
+            case id_custom_set_value: {
+                custom_config_set_value(value_id_and_data);
+                break;
+            }
+            case id_custom_get_value: {
+                custom_config_get_value(value_id_and_data);
+                break;
+            }
+            case id_custom_save: {
+                custom_config_save();
+                break;
+            }
+            default: {
+                // Unhandled message.
+                *command_id = id_unhandled;
+                break;
+            }
+        }
+        return;
+    }
+
+    // Return the unhandled state
+    *command_id = id_unhandled;
+
+    // DO NOT call raw_hid_send(data,length) here, let caller do this
+}
+
+void custom_config_set_value(uint8_t *data) {
+    // data = [ value_id, value_data ]
+    uint8_t *value_id   = &(data[0]);
+    uint8_t *value_data = &(data[1]);
+
+    switch (*value_id) {
+        case id_key_color: {
+            g_custom_config.color = *value_data;
+            //uprintf(" colorSet: %d\n",  g_custom_config.color);
+            //wait_ms(100);
+            setColor();
+            break;
+        }
+
+        case id_CW_keycode: {
+            g_custom_config.CW = value_data[0] << 8 | value_data[1];
+            //uprintf(" CWSet: %d\n",  g_custom_config.CW);
+            //wait_ms(100);
+            break;
+        }        
+        
+        case id_CCW_keycode: {
+            g_custom_config.CCW = value_data[0] << 8 | value_data[1];
+            //uprintf(" CCWSet: %d\n",  g_custom_config.CCW);
+            //wait_ms(100);
+            break;
+        }  
+        
+    }
+}
+
+void custom_config_get_value(uint8_t *data) {
+    // data = [ value_id, value_data ]
+    uint8_t *value_id   = &(data[0]);
+    uint8_t *value_data = &(data[1]);
+
+    switch (*value_id) {
+        case id_key_color: {
+            *value_data = g_custom_config.color;
+            //uprintf(" colorGet: %d\n",  g_custom_config.color);
+            //wait_ms(100);
+            break;
+        }
+        case id_CW_keycode: {
+            value_data[0] = g_custom_config.CW >> 8;
+            value_data[1] = g_custom_config.CW & 0xFF;
+            //uprintf(" CWGet: %d\n",  g_custom_config.CW);
+            //wait_ms(100);
+            break;
+        }        
+
+        case id_CCW_keycode: {
+            value_data[0] = g_custom_config.CCW >> 8;
+            value_data[1] = g_custom_config.CCW & 0xFF;
+            //uprintf(" CCWGet: %d\n",  g_custom_config.CCW);
+            //wait_ms(100);
+            break;
+        } 
+        
+    }
+}
+
+#define custom_config_EEPROM_ADDR 0x000
+
+void custom_config_save(void) {
+    //TODO: Find an appropriate address that doesn't conflict with other stuff
+    // eeprom_update_block(&g_custom_config, ((void *)custom_config_EEPROM_ADDR), sizeof(custom_config));
+}
+
+//"content": ["id_qmk_rgblight_color", 2, 1]
 //"content": ["value_key", channel_id, value_id]
+
+
+
+void setColor() {
+     if(g_custom_config.color == 0){
+        writePinHigh(RGB_PIN_RED);
+        writePinLow(RGB_PIN_GREEN);
+        writePinLow(RGB_PIN_BLUE);
+     }
+     else if(g_custom_config.color == 1){
+        writePinLow(RGB_PIN_RED);
+        writePinHigh(RGB_PIN_GREEN);
+        writePinLow(RGB_PIN_BLUE);
+     }
+    else if(g_custom_config.color == 2){
+        writePinLow(RGB_PIN_RED);
+        writePinLow(RGB_PIN_GREEN);
+        writePinHigh(RGB_PIN_BLUE);
+     }
+    else if(g_custom_config.color == 3){
+        writePinHigh(RGB_PIN_RED);
+        writePinLow(RGB_PIN_GREEN);
+        writePinHigh(RGB_PIN_BLUE);
+     }
+     else if(g_custom_config.color == 4){
+        writePinHigh(RGB_PIN_RED);
+        writePinHigh(RGB_PIN_GREEN);
+        writePinLow(RGB_PIN_BLUE);
+     }
+     else if(g_custom_config.color == 5){
+        writePinLow(RGB_PIN_RED);
+        writePinHigh(RGB_PIN_GREEN);
+        writePinHigh(RGB_PIN_BLUE);
+     }
+     else{
+        writePinLow(RGB_PIN_RED);
+        writePinLow(RGB_PIN_GREEN);
+        writePinLow(RGB_PIN_BLUE);
+     }
+}

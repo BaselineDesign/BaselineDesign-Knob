@@ -14,13 +14,13 @@
 
     "menus": [
         {
-            "label": "Label 1",
+            "label": "KNOB Customization",
             "content": [
                 {
-                    "label": "label 2",
+                    "label": " ",
                     "content": [
                         {
-                            "label": "label 3",
+                            "label": "LED Color",
                             "type": "dropdown",
                             "options":[
                                 ["red", 0],
@@ -32,6 +32,16 @@
                                 ["off", 6]
                             ],
                             "content": ["id_key_color", 0, 1]
+                        },
+                        {
+                            "label": "CW Keycode",
+                            "type": "keycode",
+                            "content": ["id_CW_keycode", 0, 2]
+                        },
+                        {
+                            "label": "CCW Keycode",
+                            "type": "keycode",
+                            "content": ["id_CCW_keycode", 0, 3]
                         }
                     ]
                 }

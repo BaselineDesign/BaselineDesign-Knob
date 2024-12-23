@@ -48,7 +48,7 @@ void keyboard_pre_init_user(void){
     setPinOutput(RGB_PIN_GREEN);
     setPinOutput(RGB_PIN_BLUE);
 
-    void setColor()
+    setColor();
 }
 
 uint8_t data_high[1];  // Array to store the high byte
@@ -131,8 +131,6 @@ void matrix_scan_user(void) {
  
     }
 }
-
-
 
 
 

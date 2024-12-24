@@ -109,8 +109,8 @@ void matrix_scan_user(void) {
     }
 
     #ifdef CONSOLE_ENABLE
-    uprintf(" Scaled angle: %d last Value: %d delta: %d stepsize %d\n",  scaled_angle, lastValue, delta, stepSize);
-    wait_ms(100);
+    //uprintf(" Scaled angle: %d last Value: %d delta: %d stepsize %d\n",  scaled_angle, lastValue, delta, stepSize);
+    //wait_ms(100);
     #endif 
     
     // Volume control logic
@@ -133,7 +133,16 @@ void matrix_scan_user(void) {
 }
 
 
+void matrix_print(void) {
+    print_matrix_header();
 
+    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+        phex(row);
+        print(": ");
+        print_matrix_row(row);
+        print("\n");
+    }
+}
 
 
 

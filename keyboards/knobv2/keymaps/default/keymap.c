@@ -33,6 +33,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     )
 };
 
+    
+        // whatever read code
+        
 
 void keyboard_pre_init_user(void){
     // Initialize the I2C driver
@@ -61,7 +64,7 @@ int16_t lastValue = 0;  // Stores the last value of the encoder that triggered a
 int16_t stepSize = 82;  // How large of a change in encoder readings to trigger a keystroke (4096 resolution 50 volume clicks on windows so 82) 
 
 //AS5600 stores its angle measurements in two registrys that need to be recorded separately and then combined
-void matrix_scan_user(void) {
+void encoder_driver_task(void) {
     // Perform the read operation for the high byte
     i2c_status_t highVal = i2c_read_register(
         device_address,          // Device address
@@ -111,38 +114,40 @@ void matrix_scan_user(void) {
     #ifdef CONSOLE_ENABLE
     //uprintf(" Scaled angle: %d last Value: %d delta: %d stepsize %d\n",  scaled_angle, lastValue, delta, stepSize);
     //wait_ms(100);
+    uprintf("matrix[0] = %d, matrix[1] = %d, matrix[2] = %d, matrix[3] = %d", MATRIX_ROWS, MATRIX_ROWS, MATRIX_ROWS, MATRIX_ROWS);
     #endif 
     
     // Volume control logic
     if (delta > stepSize) {
         // Do on CW
         lastValue = scaled_angle;  // Update last value
-        register_code(g_custom_config.CW);  // Send key press
-        wait_ms(10);              // Wait for the key to register
-        unregister_code(g_custom_config.CW);  // Release key
+        //register_code(g_custom_config.CW);  // Send key press
+        //wait_ms(10);              // Wait for the key to register
+        //unregister_code(g_custom_config.CW);  // Release key
+        encoder_queue_event(0, true);
     } 
     
     else if (delta < -stepSize) {
         // Do on CCW
         lastValue = scaled_angle;  // Update last value
-        register_code(g_custom_config.CCW);  // Send key press
-        wait_ms(10);              // Wait for the key to register
-        unregister_code(g_custom_config.CCW);  // Release key
+        //register_code(g_custom_config.CCW);  // Send key press
+        //wait_ms(10);              // Wait for the key to register
+        //unregister_code(g_custom_config.CCW);  // Release key
+        encoder_queue_event(0, false);
  
     }
 }
 
 
-void matrix_print(void) {
-    print_matrix_header();
 
-    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
-        phex(row);
-        print(": ");
-        print_matrix_row(row);
-        print("\n");
-    }
-}
+//bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  // If console is enabled, it will print the matrix position and status of each key pressed
+//#ifdef CONSOLE_ENABLE
+    //uprintf("KL: kc: 0x%04X, col: %2u, row: %2u, pressed: %u, time: %5u, int: %u, count: %u\n", keycode, record->event.key.col, record->event.key.row, record->event.pressed, record->event.time, record->tap.interrupted, record->tap.count);
+    
+//#endif 
+//  return true;
+//}
 
 
 

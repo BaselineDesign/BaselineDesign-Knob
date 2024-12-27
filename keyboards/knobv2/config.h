@@ -7,3 +7,6 @@
 #define BOOTMAGIC_ROW 0
 #define BOOTMAGIC_COLUMN 0
 
+#define ENCODER_A_PINS { F4 }
+#define ENCODER_B_PINS { F5 }
+

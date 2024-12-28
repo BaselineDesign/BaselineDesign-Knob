@@ -14,15 +14,20 @@ void custom_config_get_value(uint8_t *data);
 void custom_config_save(void);
 void setColor(void);
 
-struct custom_config{
-    uint8_t color;
-    int16_t sensitivity;
-} g_custom_config;
+typedef union {
+    uint32_t raw;
+    struct{
+        uint8_t color;
+        int16_t sensitivity;
+    };
+} custom_config_t;
 
-struct custom_config g_custom_config = {
-    .color = 0,         // Default value for `color`
-    .sensitivity = 82   // How large of a change in encoder readings to trigger a keystroke (4096 resolution 50 volume clicks on windows so 82) 
-};
+custom_config_t custom_config;
+
+//struct custom_config g_custom_config = {
+//    .color = 0,         // Default value for `color`
+//    .sensitivity = 82   // How large of a change in encoder readings to trigger a keystroke (4096 resolution 50 volume clicks on windows so 82) 
+//};
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
@@ -117,25 +122,25 @@ void encoder_driver_task(void) {
     #endif 
     
     // Volume control logic
-    if (delta > g_custom_config.sensitivity) {
+    if (delta > custom_config.sensitivity) {
         // Do on CW
         lastValue = scaled_angle;  // Update last value
-        //register_code(g_custom_config.CW);  // Send key press
+        //register_code(custom_config.CW);  // Send key press
         //wait_ms(10);              // Wait for the key to register
-        //unregister_code(g_custom_config.CW);  // Release key
+        //unregister_code(custom_config.CW);  // Release key
         encoder_queue_event(0, true);
-        //uprintf(" sensitivity: %d\n",  g_custom_config.sensitivity);
+        //uprintf(" sensitivity: %d\n",  custom_config.sensitivity);
        // wait_ms(10);
     } 
     
-    else if (delta < -g_custom_config.sensitivity) {
+    else if (delta < -custom_config.sensitivity) {
         // Do on CCW
         lastValue = scaled_angle;  // Update last value
-        //register_code(g_custom_config.CCW);  // Send key press
+        //register_code(custom_config.CCW);  // Send key press
         //wait_ms(10);              // Wait for the key to register
-        //unregister_code(g_custom_config.CCW);  // Release key
+        //unregister_code(custom_config.CCW);  // Release key
         encoder_queue_event(0, false);
-        //uprintf(" sensitivity: %d\n",  g_custom_config.sensitivity);
+        //uprintf(" sensitivity: %d\n",  custom_config.sensitivity);
         //wait_ms(10);
  
     }
@@ -202,17 +207,17 @@ void custom_config_set_value(uint8_t *data) {
 
     switch (*value_id) {
         case id_key_color: {
-            g_custom_config.color = *value_data;
-            //uprintf(" colorSet: %d\n",  g_custom_config.color);
+            custom_config.color = *value_data;
+            //uprintf(" colorSet: %d\n",  custom_config.color);
             //wait_ms(100);
             setColor();
             break;
         }
 
         case id_sensitivity: {
-             g_custom_config.sensitivity = *value_data;
-            //g_custom_config.sensitivity = value_data[0] << 8 | value_data[1];
-            //uprintf(" CWSet: %d\n",  g_custom_config.CW);
+             custom_config.sensitivity = *value_data;
+            //custom_config.sensitivity = value_data[0] << 8 | value_data[1];
+            //uprintf(" CWSet: %d\n",  custom_config.CW);
             //wait_ms(100);
             break;
         }          
@@ -226,27 +231,39 @@ void custom_config_get_value(uint8_t *data) {
 
     switch (*value_id) {
         case id_key_color: {
-            *value_data = g_custom_config.color;
-            //uprintf(" colorGet: %d\n",  g_custom_config.color);
+            *value_data = custom_config.color;
+            //uprintf(" colorGet: %d\n",  custom_config.color);
             //wait_ms(100);
             break;
         }
         case id_sensitivity: {
-            *value_data = g_custom_config.sensitivity;
-            //value_data[0] = g_custom_config.sensitivity >> 8;
-            //value_data[1] = g_custom_config.sensitivity & 0xFF;
-            //uprintf(" CWGet: %d\n",  g_custom_config.CW);
+            *value_data = custom_config.sensitivity;
+            //value_data[0] = custom_config.sensitivity >> 8;
+            //value_data[1] = custom_config.sensitivity & 0xFF;
+            //uprintf(" CWGet: %d\n",  custom_config.CW);
             //wait_ms(100);
             break;
         }                
     }
 }
 
-#define custom_config_EEPROM_ADDR 0x000
+
+void eeconfig_init_user(void) {
+    custom_config.sensitivity = 82;
+    custom_config.color = 0;
+    eeconfig_update_user(custom_config.raw);
+}
+
+void matrix_init_user(void) {
+    custom_config.raw = eeconfig_read_user();
+    setColor();
+}
+//#define custom_config_EEPROM_ADDR 0x000
 
 void custom_config_save(void) {
+    eeconfig_update_user(custom_config.raw);
     //TODO: Find an appropriate address that doesn't conflict with other stuff
-    //eeprom_update_block(&g_custom_config, ((void *)custom_config_EEPROM_ADDR), sizeof(custom_config));
+    //eeprom_update_block(&custom_config, ((void *)custom_config_EEPROM_ADDR), sizeof(custom_config));
 }
 
 //"content": ["id_qmk_rgblight_color", 2, 1]
@@ -255,32 +272,32 @@ void custom_config_save(void) {
 
 
 void setColor() {
-     if(g_custom_config.color == 0){
+     if(custom_config.color == 0){
         writePinHigh(RGB_PIN_RED);
         writePinLow(RGB_PIN_GREEN);
         writePinLow(RGB_PIN_BLUE);
      }
-     else if(g_custom_config.color == 1){
+     else if(custom_config.color == 1){
         writePinLow(RGB_PIN_RED);
         writePinHigh(RGB_PIN_GREEN);
         writePinLow(RGB_PIN_BLUE);
      }
-    else if(g_custom_config.color == 2){
+    else if(custom_config.color == 2){
         writePinLow(RGB_PIN_RED);
         writePinLow(RGB_PIN_GREEN);
         writePinHigh(RGB_PIN_BLUE);
      }
-    else if(g_custom_config.color == 3){
+    else if(custom_config.color == 3){
         writePinHigh(RGB_PIN_RED);
         writePinLow(RGB_PIN_GREEN);
         writePinHigh(RGB_PIN_BLUE);
      }
-     else if(g_custom_config.color == 4){
+     else if(custom_config.color == 4){
         writePinHigh(RGB_PIN_RED);
         writePinHigh(RGB_PIN_GREEN);
         writePinLow(RGB_PIN_BLUE);
      }
-     else if(g_custom_config.color == 5){
+     else if(custom_config.color == 5){
         writePinLow(RGB_PIN_RED);
         writePinHigh(RGB_PIN_GREEN);
         writePinHigh(RGB_PIN_BLUE);

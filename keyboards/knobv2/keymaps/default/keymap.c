@@ -1,10 +1,8 @@
-
-
 #include QMK_KEYBOARD_H
 #include "print.h"
 #include "i2c_master.h"
 
-// Define the pins connected to your RGB LED
+// Define the pins connected to RGB LEDs
 #define RGB_PIN_RED B6
 #define RGB_PIN_GREEN C6
 #define RGB_PIN_BLUE D7
@@ -24,13 +22,7 @@ typedef union {
 
 custom_config_t custom_config;
 
-//struct custom_config g_custom_config = {
-//    .color = 0,         // Default value for `color`
-//    .sensitivity = 82   // How large of a change in encoder readings to trigger a keystroke (4096 resolution 50 volume clicks on windows so 82) 
-//};
-
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-
     [0] = LAYOUT(
         KC_MEDIA_PREV_TRACK,   KC_MEDIA_PLAY_PAUSE,   KC_MEDIA_NEXT_TRACK
     )
@@ -38,11 +30,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 #if defined(ENCODER_MAP_ENABLE)
     const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
-    [0] = {  ENCODER_CCW_CW(KC_VOLD, KC_VOLU)  },
+    [0] = {  ENCODER_CCW_CW(
+        KC_VOLD, KC_VOLU
+        )},
 };
 #endif
-    
-        
 
 void keyboard_pre_init_user(void){
     // Initialize the I2C driver
@@ -56,15 +48,16 @@ void keyboard_pre_init_user(void){
     setPinOutput(RGB_PIN_GREEN);
     setPinOutput(RGB_PIN_BLUE);
 
-    setColor();
+    //turns leds on
+    setColor(); 
 }
 
-uint8_t data_high[1];  // Array to store the high byte
-uint8_t data_low[1];   // Array to store the low byte
-uint8_t device_address = (0x36 << 1);  // 7-bit I2C address of the device
+uint8_t data_high[1];  // Array to store AS5600 high byte
+uint8_t data_low[1];   // Array to store AS5600 low byte
+uint8_t device_address = (0x36 << 1);  // 7-bit I2C address of AS6500
 uint8_t register_address_high = 0x0E;  // Register to read from for high byte
 uint8_t register_address_low = 0x0F;   // Register to read from for low byte
-uint16_t timeout = 100;  // Timeout in milliseconds
+uint16_t timeout = 100;  // i2c Timeout in milliseconds
 int16_t lastValue = 0;  // Stores the last value of the encoder that triggered a keystroke
 
 //AS5600 stores its angle measurements in two registrys that need to be recorded separately and then combined
@@ -78,6 +71,7 @@ void encoder_driver_task(void) {
         timeout                  // Timeout in milliseconds
     );
 
+    //Troubleshooting messeges
     if (highVal == I2C_STATUS_SUCCESS) {
         //uprintf("High byte read successful: %d\n", data_high[0]); //unncomment if unsure if i2c is working
     } else if (highVal == I2C_STATUS_TIMEOUT) {
@@ -94,14 +88,17 @@ void encoder_driver_task(void) {
         1,                       // Number of bytes to read
         timeout                  // Timeout in milliseconds
     );
-
+    
+    //Troubleshooting messeges
     if (lowVal == I2C_STATUS_SUCCESS) {
-        //uprintf("Low byte read successful: %d\n", data_low[0]);
+        //uprintf("Low byte read successful: %d\n", data_low[0]);  //unncomment if unsure if i2c is working
     } else if (lowVal == I2C_STATUS_TIMEOUT) {
         uprintf("Low byte read operation timed out.\n");
     } else if (lowVal == I2C_STATUS_ERROR) {
         uprintf("Low byte read operation failed with an error.\n");
     }
+
+
     // Combine the high and low byte to calculate the scaled angle
     int16_t scaled_angle = ((uint16_t)data_high[0] << 8) | data_low[0];
 
@@ -116,49 +113,24 @@ void encoder_driver_task(void) {
     }
 
     #ifdef CONSOLE_ENABLE
-    //uprintf(" Scaled angle: %d last Value: %d delta: %d stepsize %d\n",  scaled_angle, lastValue, delta, stepSize);
-    //wait_ms(100);
-    //uprintf("matrix[0] = %d, matrix[1] = %d, matrix[2] = %d, matrix[3] = %d", MATRIX_ROWS, MATRIX_ROWS, MATRIX_ROWS, MATRIX_ROWS);
+        uprintf("matrix[0] = %d, matrix[1] = %d, matrix[2] = %d, matrix[3] = %d", MATRIX_ROWS, MATRIX_ROWS, MATRIX_ROWS, MATRIX_ROWS);
+        wait_ms(100);
     #endif 
     
-    // Volume control logic
+    //CW Dial controll logic
     if (delta > custom_config.sensitivity) {
-        // Do on CW
         lastValue = scaled_angle;  // Update last value
-        //register_code(custom_config.CW);  // Send key press
-        //wait_ms(10);              // Wait for the key to register
-        //unregister_code(custom_config.CW);  // Release key
-        encoder_queue_event(0, true);
-        //uprintf(" sensitivity: %d\n",  custom_config.sensitivity);
-       // wait_ms(10);
+        encoder_queue_event(0, true); // send a CW encoder event
     } 
     
+    //CCW Dial controll logic
     else if (delta < -custom_config.sensitivity) {
-        // Do on CCW
         lastValue = scaled_angle;  // Update last value
-        //register_code(custom_config.CCW);  // Send key press
-        //wait_ms(10);              // Wait for the key to register
-        //unregister_code(custom_config.CCW);  // Release key
-        encoder_queue_event(0, false);
-        //uprintf(" sensitivity: %d\n",  custom_config.sensitivity);
-        //wait_ms(10);
- 
+        encoder_queue_event(0, false); // send a CCW encoder event
     }
 }
 
-
-
-//bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  // If console is enabled, it will print the matrix position and status of each key pressed
-//#ifdef CONSOLE_ENABLE
-    //uprintf("KL: kc: 0x%04X, col: %2u, row: %2u, pressed: %u, time: %5u, int: %u, count: %u\n", keycode, record->event.key.col, record->event.key.row, record->event.pressed, record->event.time, record->tap.interrupted, record->tap.count);
-    
-//#endif 
-//  return true;
-//}
-
-
-
+//VIA SETTINGS
 enum via_buttglow_value {
     id_key_color   = 1,
     id_sensitivity  = 2
@@ -196,8 +168,6 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
 
     // Return the unhandled state
     *command_id = id_unhandled;
-
-    // DO NOT call raw_hid_send(data,length) here, let caller do this
 }
 
 void custom_config_set_value(uint8_t *data) {
@@ -208,17 +178,12 @@ void custom_config_set_value(uint8_t *data) {
     switch (*value_id) {
         case id_key_color: {
             custom_config.color = *value_data;
-            //uprintf(" colorSet: %d\n",  custom_config.color);
-            //wait_ms(100);
             setColor();
             break;
         }
 
         case id_sensitivity: {
              custom_config.sensitivity = *value_data;
-            //custom_config.sensitivity = value_data[0] << 8 | value_data[1];
-            //uprintf(" CWSet: %d\n",  custom_config.CW);
-            //wait_ms(100);
             break;
         }          
     }
@@ -232,21 +197,14 @@ void custom_config_get_value(uint8_t *data) {
     switch (*value_id) {
         case id_key_color: {
             *value_data = custom_config.color;
-            //uprintf(" colorGet: %d\n",  custom_config.color);
-            //wait_ms(100);
             break;
         }
         case id_sensitivity: {
             *value_data = custom_config.sensitivity;
-            //value_data[0] = custom_config.sensitivity >> 8;
-            //value_data[1] = custom_config.sensitivity & 0xFF;
-            //uprintf(" CWGet: %d\n",  custom_config.CW);
-            //wait_ms(100);
             break;
         }                
     }
 }
-
 
 void eeconfig_init_user(void) {
     custom_config.sensitivity = 82;
@@ -258,53 +216,52 @@ void matrix_init_user(void) {
     custom_config.raw = eeconfig_read_user();
     setColor();
 }
-//#define custom_config_EEPROM_ADDR 0x000
 
 void custom_config_save(void) {
     eeconfig_update_user(custom_config.raw);
-    //TODO: Find an appropriate address that doesn't conflict with other stuff
-    //eeprom_update_block(&custom_config, ((void *)custom_config_EEPROM_ADDR), sizeof(custom_config));
 }
 
-//"content": ["id_qmk_rgblight_color", 2, 1]
-//"content": ["value_key", channel_id, value_id]
-
-
-
 void setColor() {
-     if(custom_config.color == 0){
+    //RED
+    if(custom_config.color == 0){
         writePinHigh(RGB_PIN_RED);
         writePinLow(RGB_PIN_GREEN);
         writePinLow(RGB_PIN_BLUE);
-     }
-     else if(custom_config.color == 1){
+    }
+    //GREEN
+    else if(custom_config.color == 1){
         writePinLow(RGB_PIN_RED);
         writePinHigh(RGB_PIN_GREEN);
         writePinLow(RGB_PIN_BLUE);
-     }
+    }
+    //BLUE
     else if(custom_config.color == 2){
         writePinLow(RGB_PIN_RED);
         writePinLow(RGB_PIN_GREEN);
         writePinHigh(RGB_PIN_BLUE);
-     }
+    }
+    //PURPLE
     else if(custom_config.color == 3){
         writePinHigh(RGB_PIN_RED);
         writePinLow(RGB_PIN_GREEN);
         writePinHigh(RGB_PIN_BLUE);
-     }
-     else if(custom_config.color == 4){
+    }
+    //YELLOW
+    else if(custom_config.color == 4){
         writePinHigh(RGB_PIN_RED);
         writePinHigh(RGB_PIN_GREEN);
         writePinLow(RGB_PIN_BLUE);
-     }
-     else if(custom_config.color == 5){
+    }
+    //CYAN
+    else if(custom_config.color == 5){
         writePinLow(RGB_PIN_RED);
         writePinHigh(RGB_PIN_GREEN);
         writePinHigh(RGB_PIN_BLUE);
-     }
-     else{
+    }
+    //OFF
+    else{
         writePinLow(RGB_PIN_RED);
         writePinLow(RGB_PIN_GREEN);
         writePinLow(RGB_PIN_BLUE);
-     }
+    }
 }

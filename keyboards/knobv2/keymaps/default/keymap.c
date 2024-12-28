@@ -16,14 +16,12 @@ void setColor(void);
 
 struct custom_config{
     uint8_t color;
-    uint16_t CW;
-    uint16_t CCW;
+    int16_t sensitivity;
 } g_custom_config;
 
 struct custom_config g_custom_config = {
     .color = 0,         // Default value for `color`
-    .CW = KC_VOLU,      // Default value for `CW`
-    .CCW = KC_VOLD      // Default value for `CCW`
+    .sensitivity = 82   // How large of a change in encoder readings to trigger a keystroke (4096 resolution 50 volume clicks on windows so 82) 
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -44,9 +42,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 void keyboard_pre_init_user(void){
     // Initialize the I2C driver
     i2c_init();
-    gpio_set_pin_input(D0); // Try releasing special pins for a short time
-    gpio_set_pin_input(D1);
-    wait_ms(10); // Wait for the release to happen
+    
     // You can print a message to verify I2C initialization
     uprintf("I2C Initialized\n");
     
@@ -65,7 +61,6 @@ uint8_t register_address_high = 0x0E;  // Register to read from for high byte
 uint8_t register_address_low = 0x0F;   // Register to read from for low byte
 uint16_t timeout = 100;  // Timeout in milliseconds
 int16_t lastValue = 0;  // Stores the last value of the encoder that triggered a keystroke
-int16_t stepSize = 82;  // How large of a change in encoder readings to trigger a keystroke (4096 resolution 50 volume clicks on windows so 82) 
 
 //AS5600 stores its angle measurements in two registrys that need to be recorded separately and then combined
 void encoder_driver_task(void) {
@@ -118,26 +113,30 @@ void encoder_driver_task(void) {
     #ifdef CONSOLE_ENABLE
     //uprintf(" Scaled angle: %d last Value: %d delta: %d stepsize %d\n",  scaled_angle, lastValue, delta, stepSize);
     //wait_ms(100);
-    uprintf("matrix[0] = %d, matrix[1] = %d, matrix[2] = %d, matrix[3] = %d", MATRIX_ROWS, MATRIX_ROWS, MATRIX_ROWS, MATRIX_ROWS);
+    //uprintf("matrix[0] = %d, matrix[1] = %d, matrix[2] = %d, matrix[3] = %d", MATRIX_ROWS, MATRIX_ROWS, MATRIX_ROWS, MATRIX_ROWS);
     #endif 
     
     // Volume control logic
-    if (delta > stepSize) {
+    if (delta > g_custom_config.sensitivity) {
         // Do on CW
         lastValue = scaled_angle;  // Update last value
         //register_code(g_custom_config.CW);  // Send key press
         //wait_ms(10);              // Wait for the key to register
         //unregister_code(g_custom_config.CW);  // Release key
         encoder_queue_event(0, true);
+        //uprintf(" sensitivity: %d\n",  g_custom_config.sensitivity);
+       // wait_ms(10);
     } 
     
-    else if (delta < -stepSize) {
+    else if (delta < -g_custom_config.sensitivity) {
         // Do on CCW
         lastValue = scaled_angle;  // Update last value
         //register_code(g_custom_config.CCW);  // Send key press
         //wait_ms(10);              // Wait for the key to register
         //unregister_code(g_custom_config.CCW);  // Release key
         encoder_queue_event(0, false);
+        //uprintf(" sensitivity: %d\n",  g_custom_config.sensitivity);
+        //wait_ms(10);
  
     }
 }
@@ -157,8 +156,7 @@ void encoder_driver_task(void) {
 
 enum via_buttglow_value {
     id_key_color   = 1,
-    id_CW_keycode  = 2,
-    id_CCW_keycode = 3
+    id_sensitivity  = 2
 };
 
 void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
@@ -211,20 +209,13 @@ void custom_config_set_value(uint8_t *data) {
             break;
         }
 
-        case id_CW_keycode: {
-            g_custom_config.CW = value_data[0] << 8 | value_data[1];
+        case id_sensitivity: {
+             g_custom_config.sensitivity = *value_data;
+            //g_custom_config.sensitivity = value_data[0] << 8 | value_data[1];
             //uprintf(" CWSet: %d\n",  g_custom_config.CW);
             //wait_ms(100);
             break;
-        }        
-        
-        case id_CCW_keycode: {
-            g_custom_config.CCW = value_data[0] << 8 | value_data[1];
-            //uprintf(" CCWSet: %d\n",  g_custom_config.CCW);
-            //wait_ms(100);
-            break;
-        }  
-        
+        }          
     }
 }
 
@@ -240,22 +231,14 @@ void custom_config_get_value(uint8_t *data) {
             //wait_ms(100);
             break;
         }
-        case id_CW_keycode: {
-            value_data[0] = g_custom_config.CW >> 8;
-            value_data[1] = g_custom_config.CW & 0xFF;
+        case id_sensitivity: {
+            *value_data = g_custom_config.sensitivity;
+            //value_data[0] = g_custom_config.sensitivity >> 8;
+            //value_data[1] = g_custom_config.sensitivity & 0xFF;
             //uprintf(" CWGet: %d\n",  g_custom_config.CW);
             //wait_ms(100);
             break;
-        }        
-
-        case id_CCW_keycode: {
-            value_data[0] = g_custom_config.CCW >> 8;
-            value_data[1] = g_custom_config.CCW & 0xFF;
-            //uprintf(" CCWGet: %d\n",  g_custom_config.CCW);
-            //wait_ms(100);
-            break;
-        } 
-        
+        }                
     }
 }
 
@@ -263,7 +246,7 @@ void custom_config_get_value(uint8_t *data) {
 
 void custom_config_save(void) {
     //TODO: Find an appropriate address that doesn't conflict with other stuff
-    // eeprom_update_block(&g_custom_config, ((void *)custom_config_EEPROM_ADDR), sizeof(custom_config));
+    //eeprom_update_block(&g_custom_config, ((void *)custom_config_EEPROM_ADDR), sizeof(custom_config));
 }
 
 //"content": ["id_qmk_rgblight_color", 2, 1]

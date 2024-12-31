@@ -1,6 +1,9 @@
-# knobv2
+# KNOB V2
 
-![KNOB V2](https://imgur.com/87yGGkG)
+![KNOB](https://github.com/user-attachments/assets/2c5d7582-cdef-45be-adfb-913d4c559ec1)
+
+
+
 
 KNOB V2 is the first QMK supported device to use a hall effect rotary encoder with precise 12-bit resolution. 
 [KNOB V2 is currently for sale!](https://www.etsy.com/listing/1748096655/knob-v2-volume-media-controller)

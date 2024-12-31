@@ -59,6 +59,7 @@ uint8_t register_address_high = 0x0E;  // Register to read from for high byte
 uint8_t register_address_low = 0x0F;   // Register to read from for low byte
 uint16_t timeout = 100;  // i2c Timeout in milliseconds
 int16_t lastValue = 0;  // Stores the last value of the encoder that triggered a keystroke
+bool sleeping = false; //tracks if the controller is sleeping and turns off lights
 
 //AS5600 stores its angle measurements in two registrys that need to be recorded separately and then combined
 void encoder_driver_task(void) {
@@ -222,8 +223,14 @@ void custom_config_save(void) {
 }
 
 void setColor() {
+    //OFF
+    if(sleeping == true){
+        writePinLow(RGB_PIN_RED);
+        writePinLow(RGB_PIN_GREEN);
+        writePinLow(RGB_PIN_BLUE);
+    }
     //RED
-    if(custom_config.color == 0){
+    else if(custom_config.color == 0){
         writePinHigh(RGB_PIN_RED);
         writePinLow(RGB_PIN_GREEN);
         writePinLow(RGB_PIN_BLUE);
@@ -264,4 +271,14 @@ void setColor() {
         writePinLow(RGB_PIN_GREEN);
         writePinLow(RGB_PIN_BLUE);
     }
+}
+
+void suspend_power_down_kb(void) {
+    sleeping = true;
+    setColor();
+}
+
+void suspend_wakeup_init_kb(void) {
+    sleeping = false;
+    setColor();
 }

@@ -1,14 +1,15 @@
 # knobv2
 
-![knobv2](imgur.com image replace me!)
+![KNOB V2](https://imgur.com/87yGGkG)
 
-*A short description of the keyboard/project*
+KNOB V2 is the first QMK supported device to use a hall effect rotary encoder with precise 12-bit resolution. 
+[KNOB V2 is currently for sale!](https://www.etsy.com/listing/1748096655/knob-v2-volume-media-controller)
 
 * Keyboard Maintainer: [BaselineDesign](https://github.com/BaselineDesign)
-* Hardware Supported: *The PCBs, controllers supported*
-* Hardware Availability: *Links to where you can find this hardware*
+* Hardware Supported: KNOB V2
+* Hardware Availability: [Etsy.com](https://www.etsy.com/listing/1748096655/knob-v2-volume-media-controller)
 
-Make example for this keyboard (after setting up your build environment):
+Make example for this keyboard:
 
     make knobv2:default
 
@@ -22,6 +23,15 @@ See the [build environment setup](https://docs.qmk.fm/#/getting_started_build_to
 
 Enter the bootloader in 3 ways:
 
-* **Bootmagic reset**: Hold down the key at (0,0) in the matrix (usually the top left key or Escape) and plug in the keyboard
-* **Physical reset button**: Briefly press the button on the back of the PCB - some may have pads you must short instead
-* **Keycode in layout**: Press the key mapped to `QK_BOOT` if it is available
+* **Bootmagic reset**: Hold down the front left key and plug in KNOB
+* **Jumper reset pin**: Remove the dial from KNOB and short the rst pin to gnd (should be right next to eachother on the top left)
+
+
+
+## Using KNOB V2 with VIA
+
+1. First [Download this VIA .json file](https://drive.google.com/uc?export=download&id=1-IM_kSFA1yx1T-PHw8p78PXtSrtHclPA) 
+2. Connect your KNOB and click [here](https://usevia.app/settings) to open VIA. (Online VIA can only be opened by browsers based on Chromium currently.)
+3. In VIA turn on the "Show Design tab" in the "Settings" tab. (If it's already on, skip this step.)
+4. Drag the JSON file you downloaded in step 1 into the “Design” tab in via.
+5. On the Configure tab, select the KEYMAP section, and click on the key that you want to program, and the key will then flash slowly. Click on a key you want to remap in the BASIC/MEDIA/MACRO/LAYERS/SPECIAL/QMK LIGHTING/CUSTOM section. And it's done.

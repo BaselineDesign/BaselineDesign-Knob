@@ -1,10 +1,8 @@
-
-
 #include QMK_KEYBOARD_H
 #include "print.h"
 #include "i2c_master.h"
 
-// Define the pins connected to your RGB LED
+// Define the pins connected to RGB LEDs
 #define RGB_PIN_RED B6
 #define RGB_PIN_GREEN C6
 #define RGB_PIN_BLUE D7
@@ -14,62 +12,63 @@ void custom_config_get_value(uint8_t *data);
 void custom_config_save(void);
 void setColor(void);
 
-struct custom_config{
-    uint8_t color;
-    uint16_t CW;
-    uint16_t CCW;
-} g_custom_config;
+typedef union {
+    uint32_t raw;
+    struct{
+        uint8_t color;
+        int16_t sensitivity;
+    };
+} custom_config_t;
 
-struct custom_config g_custom_config = {
-    .color = 0,         // Default value for `color`
-    .CW = KC_VOLU,      // Default value for `CW`
-    .CCW = KC_VOLD      // Default value for `CCW`
-};
+custom_config_t custom_config;
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-
     [0] = LAYOUT(
         KC_MEDIA_PREV_TRACK,   KC_MEDIA_PLAY_PAUSE,   KC_MEDIA_NEXT_TRACK
     )
 };
 
+#if defined(ENCODER_MAP_ENABLE)
+    const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
+    [0] = {  ENCODER_CCW_CW(
+        KC_VOLD, KC_VOLU
+        )},
+};
+#endif
+
+void eeconfig_init_user(void) {
+    custom_config.sensitivity = 82;
+    custom_config.color = 0;
+    eeconfig_update_user(custom_config.raw);
+}
 
 void keyboard_pre_init_user(void){
     // Initialize the I2C driver
     i2c_init();
-    gpio_set_pin_input(D0); // Try releasing special pins for a short time
-    gpio_set_pin_input(D1);
-    wait_ms(10); // Wait for the release to happen
+    
     // You can print a message to verify I2C initialization
     uprintf("I2C Initialized\n");
-    //backlight_enable();
     
-
-
     // Set the RGB pins as outputs
     setPinOutput(RGB_PIN_RED);
     setPinOutput(RGB_PIN_GREEN);
     setPinOutput(RGB_PIN_BLUE);
 
-    // Set the RGB color
-    // Set pins high to turn on the corresponding color
-    writePinHigh(RGB_PIN_RED);   // Turn on red
-    //writePinHigh(RGB_PIN_GREEN);  // Turn off green
-    //writePinHigh(RGB_PIN_BLUE);  // Turn on blue
-
+    //turns leds on
+    setColor(); 
 }
 
-uint8_t data_high[1];  // Array to store the high byte
-uint8_t data_low[1];   // Array to store the low byte
-uint8_t device_address = (0x36 << 1);  // 7-bit I2C address of the device
+uint8_t data_high[1];  // Array to store AS5600 high byte
+uint8_t data_low[1];   // Array to store AS5600 low byte
+uint8_t device_address = (0x36 << 1);  // 7-bit I2C address of AS6500
 uint8_t register_address_high = 0x0E;  // Register to read from for high byte
 uint8_t register_address_low = 0x0F;   // Register to read from for low byte
-uint16_t timeout = 100;  // Timeout in milliseconds
+uint16_t timeout = 100;  // i2c Timeout in milliseconds
 int16_t lastValue = 0;  // Stores the last value of the encoder that triggered a keystroke
-int16_t stepSize = 82;  // How large of a change in encoder readings to trigger a keystroke (4096 resolution 50 volume clicks on windows so 82) 
+bool sleeping = false; //tracks if the controller is sleeping and turns off lights
 
 //AS5600 stores its angle measurements in two registrys that need to be recorded separately and then combined
-void matrix_scan_user(void) {
+void encoder_driver_task(void) {
     // Perform the read operation for the high byte
     i2c_status_t highVal = i2c_read_register(
         device_address,          // Device address
@@ -79,6 +78,7 @@ void matrix_scan_user(void) {
         timeout                  // Timeout in milliseconds
     );
 
+    //Troubleshooting messeges
     if (highVal == I2C_STATUS_SUCCESS) {
         //uprintf("High byte read successful: %d\n", data_high[0]); //unncomment if unsure if i2c is working
     } else if (highVal == I2C_STATUS_TIMEOUT) {
@@ -95,14 +95,17 @@ void matrix_scan_user(void) {
         1,                       // Number of bytes to read
         timeout                  // Timeout in milliseconds
     );
-
+    
+    //Troubleshooting messeges
     if (lowVal == I2C_STATUS_SUCCESS) {
-        //uprintf("Low byte read successful: %d\n", data_low[0]);
+        //uprintf("Low byte read successful: %d\n", data_low[0]);  //unncomment if unsure if i2c is working
     } else if (lowVal == I2C_STATUS_TIMEOUT) {
         uprintf("Low byte read operation timed out.\n");
     } else if (lowVal == I2C_STATUS_ERROR) {
         uprintf("Low byte read operation failed with an error.\n");
     }
+
+
     // Combine the high and low byte to calculate the scaled angle
     int16_t scaled_angle = ((uint16_t)data_high[0] << 8) | data_low[0];
 
@@ -117,40 +120,27 @@ void matrix_scan_user(void) {
     }
 
     #ifdef CONSOLE_ENABLE
-    uprintf(" Scaled angle: %d last Value: %d delta: %d stepsize %d\n",  scaled_angle, lastValue, delta, stepSize);
-    wait_ms(100);
+        uprintf("matrix[0] = %d, matrix[1] = %d, matrix[2] = %d, matrix[3] = %d", MATRIX_ROWS, MATRIX_ROWS, MATRIX_ROWS, MATRIX_ROWS);
+        wait_ms(100);
     #endif 
     
-    // Volume control logic
-    if (delta > stepSize) {
-        // Do on CW
+    //CW Dial controll logic
+    if (delta > custom_config.sensitivity) {
         lastValue = scaled_angle;  // Update last value
-        register_code(g_custom_config.CW);  // Send key press
-        wait_ms(10);              // Wait for the key to register
-        unregister_code(g_custom_config.CW);  // Release key
+        encoder_queue_event(0, true); // send a CW encoder event
     } 
     
-    else if (delta < -stepSize) {
-        // Do on CCW
+    //CCW Dial controll logic
+    else if (delta < -custom_config.sensitivity) {
         lastValue = scaled_angle;  // Update last value
-        register_code(g_custom_config.CCW);  // Send key press
-        wait_ms(10);              // Wait for the key to register
-        unregister_code(g_custom_config.CCW);  // Release key
- 
+        encoder_queue_event(0, false); // send a CCW encoder event
     }
 }
 
-
-
-
-
-
-
-
+//VIA SETTINGS
 enum via_buttglow_value {
     id_key_color   = 1,
-    id_CW_keycode  = 2,
-    id_CCW_keycode = 3
+    id_sensitivity  = 2
 };
 
 void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
@@ -185,8 +175,6 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
 
     // Return the unhandled state
     *command_id = id_unhandled;
-
-    // DO NOT call raw_hid_send(data,length) here, let caller do this
 }
 
 void custom_config_set_value(uint8_t *data) {
@@ -196,27 +184,15 @@ void custom_config_set_value(uint8_t *data) {
 
     switch (*value_id) {
         case id_key_color: {
-            g_custom_config.color = *value_data;
-            //uprintf(" colorSet: %d\n",  g_custom_config.color);
-            //wait_ms(100);
+            custom_config.color = *value_data;
             setColor();
             break;
         }
 
-        case id_CW_keycode: {
-            g_custom_config.CW = value_data[0] << 8 | value_data[1];
-            //uprintf(" CWSet: %d\n",  g_custom_config.CW);
-            //wait_ms(100);
+        case id_sensitivity: {
+             custom_config.sensitivity = *value_data;
             break;
-        }        
-        
-        case id_CCW_keycode: {
-            g_custom_config.CCW = value_data[0] << 8 | value_data[1];
-            //uprintf(" CCWSet: %d\n",  g_custom_config.CCW);
-            //wait_ms(100);
-            break;
-        }  
-        
+        }          
     }
 }
 
@@ -227,76 +203,82 @@ void custom_config_get_value(uint8_t *data) {
 
     switch (*value_id) {
         case id_key_color: {
-            *value_data = g_custom_config.color;
-            //uprintf(" colorGet: %d\n",  g_custom_config.color);
-            //wait_ms(100);
+            *value_data = custom_config.color;
             break;
         }
-        case id_CW_keycode: {
-            value_data[0] = g_custom_config.CW >> 8;
-            value_data[1] = g_custom_config.CW & 0xFF;
-            //uprintf(" CWGet: %d\n",  g_custom_config.CW);
-            //wait_ms(100);
+        case id_sensitivity: {
+            *value_data = custom_config.sensitivity;
             break;
-        }        
-
-        case id_CCW_keycode: {
-            value_data[0] = g_custom_config.CCW >> 8;
-            value_data[1] = g_custom_config.CCW & 0xFF;
-            //uprintf(" CCWGet: %d\n",  g_custom_config.CCW);
-            //wait_ms(100);
-            break;
-        } 
-        
+        }                
     }
 }
 
-#define custom_config_EEPROM_ADDR 0x000
-
-void custom_config_save(void) {
-    //TODO: Find an appropriate address that doesn't conflict with other stuff
-    // eeprom_update_block(&g_custom_config, ((void *)custom_config_EEPROM_ADDR), sizeof(custom_config));
+void matrix_init_user(void) {
+    custom_config.raw = eeconfig_read_user();
+    setColor();
 }
 
-//"content": ["id_qmk_rgblight_color", 2, 1]
-//"content": ["value_key", channel_id, value_id]
-
-
+void custom_config_save(void) {
+    eeconfig_update_user(custom_config.raw);
+}
 
 void setColor() {
-     if(g_custom_config.color == 0){
+    //OFF
+    if(sleeping == true){
+        writePinLow(RGB_PIN_RED);
+        writePinLow(RGB_PIN_GREEN);
+        writePinLow(RGB_PIN_BLUE);
+    }
+    //RED
+    else if(custom_config.color == 0){
         writePinHigh(RGB_PIN_RED);
         writePinLow(RGB_PIN_GREEN);
         writePinLow(RGB_PIN_BLUE);
-     }
-     else if(g_custom_config.color == 1){
+    }
+    //GREEN
+    else if(custom_config.color == 1){
         writePinLow(RGB_PIN_RED);
         writePinHigh(RGB_PIN_GREEN);
         writePinLow(RGB_PIN_BLUE);
-     }
-    else if(g_custom_config.color == 2){
+    }
+    //BLUE
+    else if(custom_config.color == 2){
         writePinLow(RGB_PIN_RED);
         writePinLow(RGB_PIN_GREEN);
         writePinHigh(RGB_PIN_BLUE);
-     }
-    else if(g_custom_config.color == 3){
+    }
+    //PURPLE
+    else if(custom_config.color == 3){
         writePinHigh(RGB_PIN_RED);
         writePinLow(RGB_PIN_GREEN);
         writePinHigh(RGB_PIN_BLUE);
-     }
-     else if(g_custom_config.color == 4){
+    }
+    //YELLOW
+    else if(custom_config.color == 4){
         writePinHigh(RGB_PIN_RED);
         writePinHigh(RGB_PIN_GREEN);
         writePinLow(RGB_PIN_BLUE);
-     }
-     else if(g_custom_config.color == 5){
+    }
+    //CYAN
+    else if(custom_config.color == 5){
         writePinLow(RGB_PIN_RED);
         writePinHigh(RGB_PIN_GREEN);
         writePinHigh(RGB_PIN_BLUE);
-     }
-     else{
+    }
+    //OFF
+    else{
         writePinLow(RGB_PIN_RED);
         writePinLow(RGB_PIN_GREEN);
         writePinLow(RGB_PIN_BLUE);
-     }
+    }
+}
+
+void suspend_power_down_kb(void) {
+    sleeping = true;
+    setColor();
+}
+
+void suspend_wakeup_init_kb(void) {
+    sleeping = false;
+    setColor();
 }

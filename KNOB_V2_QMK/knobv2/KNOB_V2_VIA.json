@@ -1,0 +1,66 @@
+{
+    "name": "KNOB V2",
+    "vendorId": "0x4244",
+    "productId": "0x4B4E",
+    "matrix": {
+        "rows": 1,
+        "cols": 3
+    },
+    "layouts": {
+        "keymap": [
+            
+            [
+                {
+                  "a": 7,
+                  "w": 5,
+                  "h": 5
+                },
+                "e0"
+              ],
+              [
+                {
+                  "y": 4,
+                  "x": 1,
+                  "a": 4
+                },
+                "0,0",
+                "0,1",
+                "0,2"
+              ]
+              
+        ]
+    },
+
+    "menus": [
+        {
+            "label": "KNOB Customization",
+            "content": [
+                {
+                    "label": " ",
+                    "content": [
+                        {
+                            "label": "LED Color",
+                            "type": "dropdown",
+                            "options":[
+                                ["Red", 0],
+                                ["Green", 1],
+                                ["Blue", 2],
+                                ["Purple", 3],
+                                ["Yellow", 4],
+                                ["Cyan", 5],
+                                ["Off", 6]
+                            ],
+                            "content": ["id_key_color", 0, 1]
+                        },
+                        {
+                            "label": "Sensitivity",
+                            "type": "range",
+                            "options": [1, 162],
+                            "content": ["id_sensitivity", 0, 2]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

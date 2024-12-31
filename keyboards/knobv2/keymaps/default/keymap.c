@@ -36,6 +36,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 #endif
 
+void eeconfig_init_user(void) {
+    custom_config.sensitivity = 82;
+    custom_config.color = 0;
+    eeconfig_update_user(custom_config.raw);
+}
+
 void keyboard_pre_init_user(void){
     // Initialize the I2C driver
     i2c_init();
@@ -205,12 +211,6 @@ void custom_config_get_value(uint8_t *data) {
             break;
         }                
     }
-}
-
-void eeconfig_init_user(void) {
-    custom_config.sensitivity = 82;
-    custom_config.color = 0;
-    eeconfig_update_user(custom_config.raw);
 }
 
 void matrix_init_user(void) {

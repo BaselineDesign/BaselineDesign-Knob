@@ -37,3 +37,4 @@ Enter the bootloader in 3 ways:
 3. In VIA turn on the "Show Design tab" in the "Settings" tab. (If it's already on, skip this step.)
 4. Drag the JSON file you downloaded in step 1 into the “Design” tab in via.
 5. On the Configure tab, select the KEYMAP section, and click on the key that you want to program, and the key will then flash slowly. Click on a key you want to remap in the BASIC/MEDIA/MACRO/LAYERS/SPECIAL/QMK LIGHTING/CUSTOM section. And it's done.
+

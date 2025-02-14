@@ -2,20 +2,13 @@
 #include "print.h"
 #include "i2c_master.h"
 
-// Define the pins connected to RGB LEDs
-#define RGB_PIN_RED B6
-#define RGB_PIN_GREEN C6
-#define RGB_PIN_BLUE D7
-
 void custom_config_set_value(uint8_t *data);
 void custom_config_get_value(uint8_t *data);
 void custom_config_save(void);
-void setColor(void);
 
 typedef union {
     uint32_t raw;
     struct{
-        uint8_t color;
         int16_t sensitivity;
     };
 } custom_config_t;
@@ -38,7 +31,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 void eeconfig_init_user(void) {
     custom_config.sensitivity = 82;
-    custom_config.color = 0;
     eeconfig_update_user(custom_config.raw);
 }
 
@@ -48,17 +40,8 @@ void keyboard_pre_init_user(void){
     
     // You can print a message to verify I2C initialization
     uprintf("I2C Initialized\n");
-    
-    // Set the RGB pins as outputs
-    setPinOutput(RGB_PIN_RED);
-    setPinOutput(RGB_PIN_GREEN);
-    setPinOutput(RGB_PIN_BLUE);
 
-    //turns leds on
-    setColor(); 
 }
-
-bool sleeping = false; //tracks if the controller is sleeping and turns off lights
 
 uint8_t data[2];
 uint8_t device_address = (0x36 << 1);  // 7-bit I2C address of AS6500
@@ -128,7 +111,6 @@ void encoder_driver_task(void) {
 
 //VIA SETTINGS
 enum via_buttglow_value {
-    id_key_color   = 1,
     id_sensitivity  = 2
 };
 
@@ -172,11 +154,6 @@ void custom_config_set_value(uint8_t *data) {
     uint8_t *value_data = &(data[1]);
 
     switch (*value_id) {
-        case id_key_color: {
-            custom_config.color = *value_data;
-            setColor();
-            break;
-        }
 
         case id_sensitivity: {
              custom_config.sensitivity = *value_data;
@@ -191,10 +168,6 @@ void custom_config_get_value(uint8_t *data) {
     uint8_t *value_data = &(data[1]);
 
     switch (*value_id) {
-        case id_key_color: {
-            *value_data = custom_config.color;
-            break;
-        }
         case id_sensitivity: {
             *value_data = custom_config.sensitivity;
             break;
@@ -204,70 +177,9 @@ void custom_config_get_value(uint8_t *data) {
 
 void matrix_init_user(void) {
     custom_config.raw = eeconfig_read_user();
-    setColor();
 }
 
 void custom_config_save(void) {
     eeconfig_update_user(custom_config.raw);
 }
 
-void setColor() {
-    //OFF
-    if(sleeping == true){
-        writePinLow(RGB_PIN_RED);
-        writePinLow(RGB_PIN_GREEN);
-        writePinLow(RGB_PIN_BLUE);
-    }
-    //RED
-    else if(custom_config.color == 0){
-        writePinHigh(RGB_PIN_RED);
-        writePinLow(RGB_PIN_GREEN);
-        writePinLow(RGB_PIN_BLUE);
-    }
-    //GREEN
-    else if(custom_config.color == 1){
-        writePinLow(RGB_PIN_RED);
-        writePinHigh(RGB_PIN_GREEN);
-        writePinLow(RGB_PIN_BLUE);
-    }
-    //BLUE
-    else if(custom_config.color == 2){
-        writePinLow(RGB_PIN_RED);
-        writePinLow(RGB_PIN_GREEN);
-        writePinHigh(RGB_PIN_BLUE);
-    }
-    //PURPLE
-    else if(custom_config.color == 3){
-        writePinHigh(RGB_PIN_RED);
-        writePinLow(RGB_PIN_GREEN);
-        writePinHigh(RGB_PIN_BLUE);
-    }
-    //YELLOW
-    else if(custom_config.color == 4){
-        writePinHigh(RGB_PIN_RED);
-        writePinHigh(RGB_PIN_GREEN);
-        writePinLow(RGB_PIN_BLUE);
-    }
-    //CYAN
-    else if(custom_config.color == 5){
-        writePinLow(RGB_PIN_RED);
-        writePinHigh(RGB_PIN_GREEN);
-        writePinHigh(RGB_PIN_BLUE);
-    }
-    //OFF
-    else{
-        writePinLow(RGB_PIN_RED);
-        writePinLow(RGB_PIN_GREEN);
-        writePinLow(RGB_PIN_BLUE);
-    }
-}
-
-void suspend_power_down_kb(void) {
-    sleeping = true;
-    setColor();
-}
-
-void suspend_wakeup_init_kb(void) {
-    sleeping = false;
-    setColor();
-}

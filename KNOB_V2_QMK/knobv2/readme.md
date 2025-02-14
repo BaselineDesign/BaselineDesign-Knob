@@ -11,6 +11,7 @@ KNOB V2 is the first QMK supported device to use a hall effect rotary encoder wi
 * Keyboard Maintainer: [BaselineDesign](https://github.com/BaselineDesign)
 * Hardware Supported: KNOB V2
 * Hardware Availability: [Etsy.com](https://www.etsy.com/listing/1748096655/knob-v2-volume-media-controller)
+* [3D Printing & CAD models](https://www.printables.com/model/927884-knob-v2-opensource-media-controller)
 
 Make example for this keyboard:
 

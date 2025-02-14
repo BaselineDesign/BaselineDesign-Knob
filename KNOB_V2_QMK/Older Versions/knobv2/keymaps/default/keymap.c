@@ -58,83 +58,72 @@ void keyboard_pre_init_user(void){
     setColor(); 
 }
 
-uint8_t data_high[1];  // Array to store AS5600 high byte
-uint8_t data_low[1];   // Array to store AS5600 low byte
+bool sleeping = false; //tracks if the controller is sleeping and turns off lights
+
+uint8_t data[2];
 uint8_t device_address = (0x36 << 1);  // 7-bit I2C address of AS6500
-uint8_t register_address_high = 0x0E;  // Register to read from for high byte
-uint8_t register_address_low = 0x0F;   // Register to read from for low byte
+uint16_t register_address_high = 0x0C;  // Register to read from for high byte
+uint16_t length = 2;
 uint16_t timeout = 100;  // i2c Timeout in milliseconds
 int16_t lastValue = 0;  // Stores the last value of the encoder that triggered a keystroke
-bool sleeping = false; //tracks if the controller is sleeping and turns off lights
 
 //AS5600 stores its angle measurements in two registrys that need to be recorded separately and then combined
 void encoder_driver_task(void) {
-    // Perform the read operation for the high byte
-    i2c_status_t highVal = i2c_read_register(
-        device_address,          // Device address
-        register_address_high,   // Register address for high byte
-        data_high,               // Pointer to the buffer for storing high byte
-        1,                       // Number of bytes to read
-        timeout                  // Timeout in milliseconds
-    );
-
-    //Troubleshooting messeges
-    if (highVal == I2C_STATUS_SUCCESS) {
-        //uprintf("High byte read successful: %d\n", data_high[0]); //unncomment if unsure if i2c is working
-    } else if (highVal == I2C_STATUS_TIMEOUT) {
-        uprintf("High byte read operation timed out.\n");
-    } else if (highVal == I2C_STATUS_ERROR) {
-        uprintf("High byte read operation failed with an error.\n");
-    }
-
-    // Perform the read operation for the low byte
-    i2c_status_t lowVal = i2c_read_register(
-        device_address,          // Device address
-        register_address_low,    // Register address for low byte
-        data_low,                // Pointer to the buffer for storing low byte
-        1,                       // Number of bytes to read
-        timeout                  // Timeout in milliseconds
-    );
     
-    //Troubleshooting messeges
-    if (lowVal == I2C_STATUS_SUCCESS) {
+    //single read testing
+    i2c_status_t comboVal = i2c_read_register(
+        device_address,          // Device address
+        register_address_high,
+        data,                // Pointer to the buffer for storing low byteab
+        length,                       // Number of bytes to read
+        timeout                  // Timeout in milliseconds
+    );
+    if (comboVal == I2C_STATUS_SUCCESS) {
         //uprintf("Low byte read successful: %d\n", data_low[0]);  //unncomment if unsure if i2c is working
-    } else if (lowVal == I2C_STATUS_TIMEOUT) {
+    } else if (comboVal == I2C_STATUS_TIMEOUT) {
         uprintf("Low byte read operation timed out.\n");
-    } else if (lowVal == I2C_STATUS_ERROR) {
+    } else if (comboVal == I2C_STATUS_ERROR) {
         uprintf("Low byte read operation failed with an error.\n");
     }
-
-
+    
     // Combine the high and low byte to calculate the scaled angle
-    int16_t scaled_angle = ((uint16_t)data_high[0] << 8) | data_low[0];
+    int16_t scaled_angle = ((uint16_t)data[0] << 8) | data[1];
 
     //delta is now equal to the difference between the value that last triggered a keystroke and the most recent measured value
     int16_t delta = scaled_angle - lastValue; 
 
+    
     // Handle the wraparound case when the value goes from 4096->0
     if (delta > 2047) {
-        delta -= 4096;  // Angle wrapped around in the positive direction
-    } else if (delta < -2047) {
-        delta += 4096;  // Angle wrapped around in the negative direction
-    }
+        delta = 0;  // Angle wrapped around in the positive direction
+        lastValue = scaled_angle;
 
-    #ifdef CONSOLE_ENABLE
-        uprintf("matrix[0] = %d, matrix[1] = %d, matrix[2] = %d, matrix[3] = %d", MATRIX_ROWS, MATRIX_ROWS, MATRIX_ROWS, MATRIX_ROWS);
-        wait_ms(100);
-    #endif 
+    } else if (delta < -2047) {
+        delta = 0;  // Angle wrapped around in the negative direction
+        lastValue = scaled_angle;
+    }
     
     //CW Dial controll logic
     if (delta > custom_config.sensitivity) {
         lastValue = scaled_angle;  // Update last value
         encoder_queue_event(0, true); // send a CW encoder event
+        //wait_ms(40);
+
     } 
     
     //CCW Dial controll logic
     else if (delta < -custom_config.sensitivity) {
         lastValue = scaled_angle;  // Update last value
         encoder_queue_event(0, false); // send a CCW encoder event
+        //wait_ms(40);
     }
+
+    #ifdef CONSOLE_ENABLE
+        if(delta > custom_config.sensitivity || delta < -custom_config.sensitivity ){
+            uprintf(" Scaled angle: %d last Value: %d dataHigh: %d dataLow: %d delta: %d\n",  scaled_angle, lastValue, data[0], data[1], delta);
+            //wait_ms(100);
+        }
+    #endif 
 }
 
 //VIA SETTINGS

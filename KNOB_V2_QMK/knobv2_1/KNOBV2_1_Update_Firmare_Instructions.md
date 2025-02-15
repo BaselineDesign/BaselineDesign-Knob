@@ -3,7 +3,7 @@
 ![KNOB](https://github.com/user-attachments/assets/2c5d7582-cdef-45be-adfb-913d4c559ec1)
 
 1. Download QMK Toolbox from [here](https://qmk.fm/toolbox) if you havent already
-2. [Download this hex file](https://drive.google.com/uc?export=download&id=1pcAgK7doNLUKIhplbfqNpUiG-BOIIWfD)
+2. [Download this hex file](https://drive.google.com/uc?export=download&id=14kMoJPcEGsKEKZ07-O6sWpsd4XSsVIXF)
 3. Open QMK Toolbox and load in the downloaded hex file. Make sure to check the "Auto-Flash" checkbox
 
 ![V2firmwareload](https://github.com/user-attachments/assets/ce5f958a-abb7-44cb-93a7-7890bb07d8b4)

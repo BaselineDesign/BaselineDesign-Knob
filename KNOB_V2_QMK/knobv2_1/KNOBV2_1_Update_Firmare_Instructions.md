@@ -1,4 +1,4 @@
-# KNOB V2: Updating your QMK firmware
+# KNOB V2.1: Updating your QMK firmware
 
 ![KNOB](https://github.com/user-attachments/assets/2c5d7582-cdef-45be-adfb-913d4c559ec1)
 

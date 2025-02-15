@@ -34,6 +34,6 @@ KNOB V2.1:
 * When you press and hold the center key nothing should happen
 * When you connect to your KNOB with [VIA](https://usevia.app/) it will tell you which version you have
 *  Instructions and more information can be found [here](https://github.com/BaselineDesign/BaselineDesign-Knob/tree/main/KNOB_V2_QMK/knobv2_1)
-* If you recieved your KNOB before 2/14/2025 your KNOB has a bug where 10% of the time it will send the wrong key when rotating the dial. Follow these instructions to update your KNOB V2.1 to the current version
+* If you recieved your KNOB before 2/14/2025 your KNOB has a bug where 10% of the time it will send the wrong key when rotating the dial. [Follow these instructions to update your KNOB V2.1 to the current version](https://github.com/BaselineDesign/BaselineDesign-Knob/blob/main/KNOB_V2_QMK/knobv2_1/KNOBV2_1_Update_Firmare_Instructions.md)
 
 

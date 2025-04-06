@@ -3,7 +3,7 @@ KNOB is the first QMK supported device to use a hall effect rotary encoder with 
 [KNOB V2.1 is currently for sale!](https://baselinedesign.tech/products/knobv21)
 
 * Keyboard Maintainer: [BaselineDesign](https://github.com/BaselineDesign)
-* Hardware Availability: [Etsy.com](https://baselinedesign.tech/products/knobv21)
+* Hardware Availability: [BaselineDesign.tech](https://baselinedesign.tech/products/knobv21)
 
 ![KNOB](https://github.com/user-attachments/assets/2c5d7582-cdef-45be-adfb-913d4c559ec1)
 

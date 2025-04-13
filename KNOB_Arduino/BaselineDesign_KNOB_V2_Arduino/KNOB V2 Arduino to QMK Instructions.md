@@ -13,7 +13,7 @@
 
 ![V2firmwareload](https://github.com/user-attachments/assets/ce5f958a-abb7-44cb-93a7-7890bb07d8b4)
 
-2. Remove your KNOB dial buy rocking the dial back and forth while pulling it away from the body
+2. Remove your KNOB dial by rocking the dial back and forth while pulling it away from the body
 3. Take note of the "RST" & "GND" pins, we'll be shorting these with the paper clip to flash the new firmware
 
 ![RST & GND](https://github.com/user-attachments/assets/66663ef8-d0a4-4143-801a-b6280e025bb4)

@@ -29,6 +29,7 @@ KNOB V2 (Arduino):
 * Shipped with arduino programming but can be upgraded to qmk
 * Arduino Code can be found [here](https://github.com/BaselineDesign/BaselineDesign-Knob/tree/main/KNOB_Arduino/BaselineDesign_KNOB_V2_Arduino)
 * Press and hold the center key, if the backlighting cycles through different colors then you have an arduino KNOB V2
+* If you'd like to update your arduino KNOB V2 to QMK firmware so that you can program it with VIA follow [these instructions](https://github.com/BaselineDesign/BaselineDesign-Knob/blob/main/KNOB_Arduino/BaselineDesign_KNOB_V2_Arduino/KNOB%20V2%20Arduino%20to%20QMK%20Instructions.md)
 
 KNOB V1:
 * Only has Arduino Code support

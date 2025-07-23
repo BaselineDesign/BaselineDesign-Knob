@@ -1,6 +1,7 @@
 # KNOB
 KNOB is the first QMK supported device to use a hall effect rotary encoder with precise 12-bit resolution. 
 [KNOB V2.1 is currently for sale!](https://baselinedesign.tech/products/knobv21)
+[Full QMK source code can be found here under the BaselineDesign branch](https://github.com/BaselineDesign/qmk_firmware.git)
 
 * Keyboard Maintainer: [BaselineDesign](https://github.com/BaselineDesign)
 * Hardware Availability: [BaselineDesign.tech](https://baselinedesign.tech/products/knobv21)

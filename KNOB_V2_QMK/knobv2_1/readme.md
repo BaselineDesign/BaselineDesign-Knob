@@ -19,7 +19,7 @@ KNOB comes pre mapped to work perfectly as a volume dial with volume control on 
 3. Plug KNOB into your computer and right click [here](https://usevia.app/settings) to open VIA in a new tab. (Online VIA can only be opened by browsers based on Chromium currently.)
 4. In VIA go to the "Settings" tab (gear icon) and turn on the "Show Design tab". (If it's already on, skip this step.)
 5. Go to the "Design" tab (paintbrush icon) and select the "Load" button and select the .json file you downloaded in step 1 from your downloads folder.
-7. Go to the "Configure" tab (keyboard icon) and click "Authorize Device", selct your KNOB from the pop-up and click connect.<br>
+7. Go to the "Configure" tab (keyboard icon) and click "Authorize Device", select your KNOB from the pop-up and click connect.<br>
 
 Your KNOB is now ready to be Configured!
 

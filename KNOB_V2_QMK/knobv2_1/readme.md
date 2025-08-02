@@ -53,7 +53,7 @@ To enable Smooth Scrolling click on the "KNOB CUSTOMIZATION" tab to the left (ic
 - Dead Zone: Changes how far you have to turn the dial before it starts to scroll
 - Reverse Scroll Direction: Changes the direction of scroll
 
-<br> *If Smooth scroll doesnt work when toggled on in VIA you're KNOB is running older firmware a needs to be updated using [these instructions](https://github.com/BaselineDesign/BaselineDesign-Knob/blob/main/KNOB_V2_QMK/knobv2_1/KNOBV2_1_Update_Firmare_Instructions.md)*
+<br> * If Smooth scroll doesn't work when toggled on in VIA, your KNOB is running older firmware and needs to be updated using [these instructions](https://github.com/BaselineDesign/BaselineDesign-Knob/blob/main/KNOB_V2_QMK/knobv2_1/KNOBV2_1_Update_Firmare_Instructions.md)*
 
 
 ### Customizing LEDs
@@ -80,7 +80,7 @@ See the [build environment setup](https://docs.qmk.fm/#/getting_started_build_to
 
 ## Bootloader
 
-Enter the bootloader in 3 ways:
+Enter the bootloader in 2 ways:
 
 * **Bootmagic reset**: Hold down the front left key and plug in KNOB
 * **Jumper reset pin**: Remove the dial from KNOB and short the rst pin to gnd (should be right next to eachother on the top left)

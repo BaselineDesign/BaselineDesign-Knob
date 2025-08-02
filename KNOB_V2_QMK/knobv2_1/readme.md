@@ -14,6 +14,8 @@ KNOB is the first QMK supported device to use a hall effect rotary encoder with 
 
 # Customizing your KNOB (Using the VIA web configurator) 
 KNOB comes pre mapped to work perfectly as a volume dial with volume control on the dial and media control on the keys, but with VIA you can remap your KNOB to do just about anything! VIA is an application that runs in your browser and lets you customize what the buttons and dial on your KNOB do without installing any software or writing any code. With VIA you'll also be able to change the color of the LEDs, change sensitivity, and enable smooth scrolling. To customize your KNOB with VIA you'll have to follow a couple steps and upload a file, the instructions are as follows: 
+
+[Getting started youtube video](https://youtu.be/Hd0r6GVkbzM)
 ## Setting up VIA:
 1. First [Download this VIA .json file](https://drive.google.com/uc?export=download&id=1Bo-KuTojrcoyr9Ovg1zOziSa1WW7xraH) we'll use it in a later step
 3. Plug KNOB into your computer and right click [here](https://usevia.app/settings) to open VIA in a new tab. (Online VIA can only be opened by browsers based on Chromium currently.)
